@@ -14,99 +14,101 @@ app = Flask(**name**)
 inicializar_banco()
 
 def carregar_resultado():
-"""
-Carrega o resultado mais recente gerado pelo radar.
-"""
+    """
+    Carrega o resultado mais recente gerado pelo radar.
+    """
 
-```
-arquivo = "data/resultado.json"
 
-if not os.path.exists(arquivo):
-    return {
-        "acoes": [],
-        "mensagem": "Nenhum resultado disponível ainda."
-    }
+    arquivo = "data/resultado.json"
 
-try:
-    with open(
-        arquivo,
-        "r",
-        encoding="utf-8"
-    ) as f:
-        return json.load(f)
+    if not os.path.exists(arquivo):
+        return {
+            "acoes": [],
+            "mensagem": "Nenhum resultado disponível ainda."
+        }
 
-except json.JSONDecodeError:
-    return {
-        "acoes": [],
-        "mensagem": "O arquivo de resultado está inválido."
-    }
-```
+    try:
+        with open(
+            arquivo,
+            "r",
+            encoding="utf-8"
+        ) as f:
+            return json.load(f)
 
-@app.route("/")
+    except json.JSONDecodeError:
+        return {
+            "acoes": [],
+            "mensagem": "O arquivo de resultado está inválido."
+        }
+
+
+    @app.route("/")
+
 def index():
 """
 Página principal do dashboard.
 """
 
-```
+
 resultado = carregar_resultado()
 
 return render_template(
     "index.html",
     resultado=resultado
 )
-```
+
 
 @app.route("/api/resultado")
 def api_resultado():
-"""
-Retorna o resultado do radar em JSON.
-"""
+    """
+    Retorna o resultado do radar em JSON.
+    """
 
-```
-return jsonify(carregar_resultado())
-```
 
-@app.route("/api/analises")
-def api_analises():
-"""
-Retorna as análises armazenadas no banco.
-"""
+    return jsonify(carregar_resultado())
 
-```
-analises = obter_ultimas_analises(20)
 
-return jsonify(analises)
-```
+    @app.route("/api/analises")
+    def api_analises():
+    """
+    Retorna as análises armazenadas no banco.
+    """
 
-@app.route("/api/status")
+
+    analises = obter_ultimas_analises(20)
+
+    return jsonify(analises)
+
+
+    @app.route("/api/status")
+
 def api_status():
-"""
-Endpoint simples para verificar se o servidor está funcionando.
-"""
+    """
+    Endpoint simples para verificar se o servidor está funcionando.
+    """
 
-```
-return jsonify({
-    "status": "online",
-    "servico": "B3 Radar"
-})
-```
 
-if **name** == "**main**":
+    return jsonify({
+        "status": "online",
+        "servico": "B3 Radar"
+    })
 
-```
-print("=" * 50)
-print("B3 RADAR")
-print("=" * 50)
-print()
-print("Dashboard iniciado.")
-print("Acesse no navegador:")
-print("http://127.0.0.1:5000")
-print()
 
-app.run(
-    host="127.0.0.1",
-    port=5000,
-    debug=True
-)
-```
+    if **name** == "**main**":
+
+
+    print("=" * 50)
+    print("B3 RADAR")
+    print("=" * 50)
+    print()
+    print("Dashboard iniciado.")
+    print("Acesse no navegador:")
+    print("http://127.0.0.1:5000")
+    print()
+
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=True
+    )
+

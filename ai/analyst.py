@@ -4,235 +4,227 @@ from openai import OpenAI
 from config import OPENAI_API_KEY, OPENAI_MODEL
 
 def criar_cliente():
-"""
-Cria o cliente da OpenAI.
-"""
+    """
+    Cria o cliente da OpenAI.
+    """
 
-```
-if not OPENAI_API_KEY:
-    raise RuntimeError(
-        "OPENAI_API_KEY não foi configurada no arquivo .env"
-    )
 
-return OpenAI(api_key=OPENAI_API_KEY)
-```
+    if not OPENAI_API_KEY:
+        raise RuntimeError(
+            "OPENAI_API_KEY não foi configurada no arquivo .env"
+        )
+
+    return OpenAI(api_key=OPENAI_API_KEY)
+
 
 def preparar_dados(acoes):
-"""
-Prepara os dados das ações para serem enviados à IA.
+    dados = []
 
-```
-Remove informações desnecessárias para reduzir
-o tamanho da requisição.
-"""
+    for acao in acoes:
 
-dados = []
+        item = {
+            "ticker": acao.get("ticker"),
 
-for acao in acoes:
+            "score": acao.get("score"),
 
-    item = {
-        "ticker": acao.get("ticker"),
+            "classificacao": acao.get("classificacao"),
 
-        "score": acao.get("score"),
+            "preco": acao.get("preco"),
 
-        "classificacao": acao.get("classificacao"),
+            "rsi": acao.get("rsi"),
 
-        "preco": acao.get("preco"),
+            "sma_20": acao.get("sma_20"),
+            "sma_50": acao.get("sma_50"),
+            "sma_200": acao.get("sma_200"),
 
-        "rsi": acao.get("rsi"),
+            "macd": acao.get("macd"),
+            "macd_signal": acao.get("macd_signal"),
 
-        "sma_20": acao.get("sma_20"),
-        "sma_50": acao.get("sma_50"),
-        "sma_200": acao.get("sma_200"),
+            "volume_relativo": acao.get(
+                "volume_relativo"
+            ),
 
-        "macd": acao.get("macd"),
-        "macd_signal": acao.get("macd_signal"),
+            "retorno_20d": acao.get(
+                "retorno_20d"
+            ),
 
-        "volume_relativo": acao.get(
-            "volume_relativo"
-        ),
+            "retorno_60d": acao.get(
+                "retorno_60d"
+            ),
 
-        "retorno_20d": acao.get(
-            "retorno_20d"
-        ),
+            "retorno_252d": acao.get(
+                "retorno_252d"
+            ),
 
-        "retorno_60d": acao.get(
-            "retorno_60d"
-        ),
+            "volatilidade": acao.get(
+                "volatilidade"
+            ),
 
-        "retorno_252d": acao.get(
-            "retorno_252d"
-        ),
+            "drawdown": acao.get(
+                "drawdown"
+            ),
 
-        "volatilidade": acao.get(
-            "volatilidade"
-        ),
+            "pl": acao.get("pl"),
+            "roe": acao.get("roe"),
+            "dividend_yield": acao.get(
+                "dividend_yield"
+            )
+        }
 
-        "drawdown": acao.get(
-            "drawdown"
-        ),
+        dados.append(item)
 
-        "pl": acao.get("pl"),
-        "roe": acao.get("roe"),
-        "dividend_yield": acao.get(
-            "dividend_yield"
-        )
-    }
+    return dados
 
-    dados.append(item)
-
-return dados
-```
 
 def criar_prompt(acoes):
-"""
-Cria o prompt enviado para a IA.
-"""
+    """
+    Cria o prompt enviado para a IA.
+    """
 
-```
-dados = preparar_dados(acoes)
 
-dados_json = json.dumps(
-    dados,
-    ensure_ascii=False,
-    indent=2,
-    default=str
-)
+    dados = preparar_dados(acoes)
 
-prompt = f"""
-```
+    dados_json = json.dumps(
+        dados,
+        ensure_ascii=False,
+        indent=2,
+        default=str
+    )
 
-Você é um analista auxiliar de pesquisa de investimentos.
+    prompt = f"""
 
-Seu trabalho é analisar os dados quantitativos fornecidos
-pelo meu sistema de monitoramento de ações da B3.
 
-IMPORTANTE:
+    Você é um analista auxiliar de pesquisa de investimentos.
 
-* Não dê ordens diretas de compra ou venda.
-* Não prometa rentabilidade.
-* Não trate o score como probabilidade de retorno.
-* Não invente dados que não foram fornecidos.
-* Diferencie claramente fatos, sinais técnicos e incertezas.
-* A análise deve servir para decidir quais empresas merecem
-  uma investigação mais aprofundada.
-* Considere riscos e pontos negativos, não apenas pontos positivos.
-* Se os dados forem insuficientes, diga explicitamente.
+    Seu trabalho é analisar os dados quantitativos fornecidos
+    pelo meu sistema de monitoramento de ações da B3.
 
-Para cada ação, informe:
+    IMPORTANTE:
 
-1. Resumo do cenário
-2. Principais sinais positivos
-3. Principais riscos
-4. Indicadores que merecem investigação
-5. O que seria necessário verificar antes de qualquer decisão
-6. Uma classificação textual:
+    * Não dê ordens diretas de compra ou venda.
+    * Não prometa rentabilidade.
+    * Não trate o score como probabilidade de retorno.
+    * Não invente dados que não foram fornecidos.
+    * Diferencie claramente fatos, sinais técnicos e incertezas.
+    * A análise deve servir para decidir quais empresas merecem
+    uma investigação mais aprofundada.
+    * Considere riscos e pontos negativos, não apenas pontos positivos.
+    * Se os dados forem insuficientes, diga explicitamente.
 
-   * ESTUDAR
-   * ACOMPANHAR
-   * POUCO PRIORITÁRIO
+    Para cada ação, informe:
 
-Depois faça uma conclusão geral comparando os ativos
-SEM criar um ranking de "melhor investimento".
+    1. Resumo do cenário
+    2. Principais sinais positivos
+    3. Principais riscos
+    4. Indicadores que merecem investigação
+    5. O que seria necessário verificar antes de qualquer decisão
+    6. Uma classificação textual:
 
-Dados fornecidos pelo sistema:
+    * ESTUDAR
+    * ACOMPANHAR
+    * POUCO PRIORITÁRIO
 
-{dados_json}
-"""
+    Depois faça uma conclusão geral comparando os ativos
+    SEM criar um ranking de "melhor investimento".
 
-```
-return prompt
-```
+    Dados fornecidos pelo sistema:
+
+    {dados_json}
+    """
+
+
+    return prompt
+
 
 def analisar_acoes(acoes):
-"""
-Envia as ações selecionadas para a OpenAI.
+    """
+    Envia as ações selecionadas para a OpenAI.
 
-```
-Retorna o texto produzido pela IA.
-"""
 
-if not acoes:
-    return "Nenhuma ação foi selecionada para análise."
+    Retorna o texto produzido pela IA.
+    """
 
-cliente = criar_cliente()
+    if not acoes:
+        return "Nenhuma ação foi selecionada para análise."
 
-prompt = criar_prompt(acoes)
+    cliente = criar_cliente()
 
-resposta = cliente.responses.create(
-    model=OPENAI_MODEL,
-    input=prompt,
-    max_output_tokens=1500
-)
+    prompt = criar_prompt(acoes)
 
-return resposta.output_text
-```
+    resposta = cliente.responses.create(
+        model=OPENAI_MODEL,
+        input=prompt,
+        max_output_tokens=1500
+    )
+
+    return resposta.output_text
+
 
 def analisar_uma_acao(acao):
-"""
-Analisa somente uma ação.
+    """
+    Analisa somente uma ação.
 
-```
-Útil para consultas individuais no dashboard.
-"""
 
-return analisar_acoes([acao])
-```
+    Útil para consultas individuais no dashboard.
+    """
+
+    return analisar_acoes([acao])
+
 
 def salvar_analise_texto(
-ticker,
-texto,
-arquivo="data/analise_ia.json"
-):
-"""
-Salva análises da IA em um arquivo JSON.
-"""
+    ticker,
+    texto,
+    arquivo="data/analise_ia.json"
+    ):
+    """
+    Salva análises da IA em um arquivo JSON.
+    """
 
-```
-try:
+
+    try:
+        with open(
+            arquivo,
+            "r",
+            encoding="utf-8"
+        ) as arquivo_json:
+
+            dados = json.load(arquivo_json)
+
+    except (
+        FileNotFoundError,
+        json.JSONDecodeError
+    ):
+        dados = {}
+
+    dados[ticker] = {
+        "analise": texto
+    }
+
     with open(
         arquivo,
-        "r",
+        "w",
         encoding="utf-8"
     ) as arquivo_json:
 
-        dados = json.load(arquivo_json)
+        json.dump(
+            dados,
+            arquivo_json,
+            ensure_ascii=False,
+            indent=2
+        )
 
-except (
-    FileNotFoundError,
-    json.JSONDecodeError
-):
-    dados = {}
 
-dados[ticker] = {
-    "analise": texto
-}
+    if **name** == "**main**":
 
-with open(
-    arquivo,
-    "w",
-    encoding="utf-8"
-) as arquivo_json:
 
-    json.dump(
-        dados,
-        arquivo_json,
-        ensure_ascii=False,
-        indent=2
-    )
-```
+    print("Módulo de análise com IA carregado.")
 
-if **name** == "**main**":
+    if not OPENAI_API_KEY:
+        print(
+            "AVISO: OPENAI_API_KEY não encontrada."
+        )
+    else:
+        print(
+            f"Modelo configurado: {OPENAI_MODEL}"
+        )
 
-```
-print("Módulo de análise com IA carregado.")
-
-if not OPENAI_API_KEY:
-    print(
-        "AVISO: OPENAI_API_KEY não encontrada."
-    )
-else:
-    print(
-        f"Modelo configurado: {OPENAI_MODEL}"
-    )
-```

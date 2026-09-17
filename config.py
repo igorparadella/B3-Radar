@@ -102,10 +102,6 @@ MAX_ACOES_EXIBIDAS = 20
 # ============================================================
 
 def validar_configuracao():
-    """
-    Verifica se as configurações básicas estão corretas.
-    """
-
     if not OPENAI_API_KEY:
         raise RuntimeError(
             "\n"
